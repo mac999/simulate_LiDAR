@@ -19,10 +19,10 @@ def load_mesh(filename):
 	mesh = trimesh.load(filename)
 	return mesh
 
-def create_plane_targets(plane_y):
+def create_plane_targets(plane_y, targets_count=50):
 	point_targets = []
-	for i in range(50):
-		for j in range(50):
+	for i in range(targets_count):
+		for j in range(targets_count):
 			step = 0.1
 			x = i * step - 2.5
 			y = plane_y
@@ -38,12 +38,14 @@ class lidar_device:
 	yaw = 0.0  # LiDAR's yaw angle (rotation around the vertical axis)
 	fov = 60.0 # 10 # 60  # LiDAR's field of view in degrees
 	range = 10.0  # Maximum LiDAR range
+	noise = 0.2 # Noise level (Gaussian standard deviation) in meters
 
-	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, range_angle = 10):
+	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, range_angle = 10, noise=0.2):
 		self.position = pos
 		self.yaw = yaw
 		self.fov = fov_angle
 		self.range = range_angle
+		self.noise = noise
 
 	def create_rays(self):
 		ray_origins = None # np.array([[0.0, 0.5, 0.0]])
@@ -98,7 +100,8 @@ class lidar_device:
 
 			# Create an Open3D PointCloud from the intersection points
 			intersection_points = o3d.geometry.PointCloud()
-			intersection_points.points = o3d.utility.Vector3dVector(locations)
+			locations = locations + np.random.normal(0, self.noise, locations.shape)
+			intersection_points.points = o3d.utility.Vector3dVector(locations) 
 			intersection_points_set.append(intersection_points)
 
 			# Create an Open3D LineSet to visualize rays
@@ -143,9 +146,11 @@ def main():
 	parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
 	parser.add_argument('--output', default='output.pcd', help='output file(.pcd)')
 	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
-	parser.add_argument('--yaw', default='0.0', help='LiDAR yaw angle')
-	parser.add_argument('--fov', default='60.0', help='LiDAR field of view')
-	parser.add_argument('--range', default='10.0', help='LiDAR range')
+	parser.add_argument('--yaw', default=0.0, help='LiDAR yaw angle')
+	parser.add_argument('--fov', default=60.0, help='LiDAR field of view')
+	parser.add_argument('--range', default=10.0, help='LiDAR range')
+	parser.add_argument('--noise', default=0.2, help='noise level')
+	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
 	args = parser.parse_args()
 
 	# create object
@@ -154,12 +159,18 @@ def main():
 		mesh = load_mesh(args.input)
 	else:
 		mesh = create_box(extents)
-	extents = mesh.extents	# extents = [5.0, 5.0, 3.0]
-	point_targets = create_plane_targets(extents[1] / 2.0)
+	if mesh is None:
+		print('Failed to load mesh')
+		return
+	point_targets = []
+	point_targets.append(mesh)
+	if int(args.multi_targets) > 0:
+		extents = mesh.extents	# extents = [5.0, 5.0, 3.0]
+		point_targets = create_plane_targets(extents[1] / 2.0, args.multi_targets)
 
 	# create virtual lidar and scan
 	lidar = lidar_device()
-	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=float(args.yaw), fov_angle=float(args.fov), range_angle=float(args.range))
+	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, range_angle=args.range, noise=args.noise)
 
 	ray_origins, ray_directions = lidar.create_rays()
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
