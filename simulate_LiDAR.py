@@ -36,15 +36,17 @@ class lidar_device:
 	# Define LiDAR parameters
 	position = [0.0, 0.0, 0.0]  # LiDAR's position in the room
 	yaw = 0.0  # LiDAR's yaw angle (rotation around the vertical axis)
-	fov = 60.0 # 10 # 60  # LiDAR's field of view in degrees
+	fov = 60.0 # 10 # LiDAR's field of view in degrees
+	interval = 20 # Angular interval between rays in degrees
 	range = 10.0  # Maximum LiDAR range
 	noise = 0.2 # Noise level (Gaussian standard deviation) in meters
 
-	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, range_angle = 10, noise=0.2):
+	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, interval=20, range = 10, noise=0.2):
 		self.position = pos
 		self.yaw = yaw
 		self.fov = fov_angle
-		self.range = range_angle
+		self.interval = interval
+		self.range = range
 		self.noise = noise
 
 	def create_rays(self):
@@ -53,8 +55,8 @@ class lidar_device:
 		
 		# Generate LiDAR point cloud
 		lidar_pcd = o3d.geometry.PointCloud()
-		for azimuth in np.linspace(self.yaw - self.fov / 2, self.yaw + self.fov / 2, 10): #360):
-			for elevation in np.linspace(-self.fov / 2, self.fov / 2, 10): # 180):
+		for azimuth in np.linspace(self.yaw - self.fov / 2, self.yaw + self.fov / 2, self.interval): #360):
+			for elevation in np.linspace(-self.fov / 2, self.fov / 2, self.interval): # 180):
 				# Compute laser beam direction in LiDAR's local coordinates
 				direction = np.array([
 					np.cos(np.radians(elevation)) * np.sin(np.radians(azimuth)),
@@ -148,8 +150,9 @@ def main():
 	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
 	parser.add_argument('--yaw', default=0.0, help='LiDAR yaw angle')
 	parser.add_argument('--fov', default=60.0, help='LiDAR field of view')
-	parser.add_argument('--range', default=10.0, help='LiDAR range')
-	parser.add_argument('--noise', default=0.2, help='noise level')
+	parser.add_argument('--interval', default=20, help='LiDAR interval count')
+	parser.add_argument('--range', default=20.0, help='LiDAR range')
+	parser.add_argument('--noise', default=0.01, help='noise level')
 	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
 	args = parser.parse_args()
 
@@ -170,7 +173,7 @@ def main():
 
 	# create virtual lidar and scan
 	lidar = lidar_device()
-	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, range_angle=args.range, noise=args.noise)
+	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, interval=args.interval, range=args.range, noise=args.noise)
 
 	ray_origins, ray_directions = lidar.create_rays()
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
