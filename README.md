@@ -8,6 +8,12 @@ LiDAR point cloud generation.</br>
 <img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result2.JPG"/></p>
 </p>
 
+# install
+git clone https://github.com/mac999/simulate_LiDAR.git</br>
+pip install traceback, tqdm, numpy</br>
+pip install trimesh</br>
+pip install open3d</br>
+
 # run
 python simulate_LiDAR.py [options]</br></br>
 --input: default='model.obj', help='input mesh model file(.obj, .ply)'</br>
