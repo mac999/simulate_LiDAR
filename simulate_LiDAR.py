@@ -140,8 +140,12 @@ def convert_mesh(mesh):
 def main():
 	# arguments
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--input', default='model.obj', help='...')
-	parser.add_argument('--output', default='output.pcd', help='...')
+	parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
+	parser.add_argument('--output', default='output.pcd', help='output file(.pcd)')
+	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
+	parser.add_argument('--yaw', default='0.0', help='LiDAR yaw angle')
+	parser.add_argument('--fov', default='60.0', help='LiDAR field of view')
+	parser.add_argument('--range', default='10.0', help='LiDAR range')
 	args = parser.parse_args()
 
 	# create object
@@ -150,13 +154,12 @@ def main():
 		mesh = load_mesh(args.input)
 	else:
 		mesh = create_box(extents)
-	# extents = [5.0, 5.0, 3.0]
-	extents = mesh.extents
+	extents = mesh.extents	# extents = [5.0, 5.0, 3.0]
 	point_targets = create_plane_targets(extents[1] / 2.0)
 
 	# create virtual lidar and scan
 	lidar = lidar_device()
-	lidar.init()
+	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=float(args.yaw), fov_angle=float(args.fov), range_angle=float(args.range))
 
 	ray_origins, ray_directions = lidar.create_rays()
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
