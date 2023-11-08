@@ -8,7 +8,7 @@ LiDAR point cloud generation.</br>
 </p>
 
 # run
-python simulate_LiDAR.py [options]</br>
+python simulate_LiDAR.py [options]</br></br>
 --input: default='model.obj', help='input mesh model file(.obj, .ply)'</br>
 --output: default='output.pcd', help='output file(.pcd)'</br>
 --pos: default='0.0,0.0,0.0', help='LiDAR position'</br>
