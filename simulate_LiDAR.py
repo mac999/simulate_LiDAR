@@ -2,8 +2,12 @@
 # author: taewook kang
 # email: laputa99999@gmail.com
 # version: draft. testing. 
-#  0.1. updated. 
-# todo: load RGBD dataset, Etc.
+#  0.1. updated.
+# date: 
+#  2023.10.1. init
+#  2023.11.4. support mesh object
+#  2023.12.5. refactoring 
+# todo: load RGBD dataset, refactoring, CUDA Etc.
 # 
 import os, sys, argparse, json, re, math, traceback
 import trimesh, traceback
@@ -154,6 +158,7 @@ def main():
 	parser.add_argument('--range', default=20.0, help='LiDAR range')
 	parser.add_argument('--noise', default=0.01, help='noise level')
 	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
+	parser.add_argument('--viewer', default='on', help='run viewer = [on | off]')
 	args = parser.parse_args()
 
 	# create object
@@ -179,41 +184,43 @@ def main():
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
 
 	# room 
-	geoms = []
-	o3d_mesh = convert_mesh(mesh)
-	mat_box = create_material('defaultLitTransparency', base_color=[0.467,0.467,0.467,0.2], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
-	geom = {'name': 'box', 'geometry': o3d_mesh, 'material': mat_box}
-	geoms.append(geom)
-
-	# materials. defaultLit, defaultUnlit, unlitLine, unlitGradient, unlitSolidColor, defaultLitTransparency.
-	# http://www.open3d.org/docs/latest/python_api/open3d.visualization.tensorboard_plugin.summary.add_3d.html
-	mat_line = create_material('unlitSolidColor', base_color=[0.0, 0, 1.0, 1.0], thickness=1.0)
-	for index, ray_lines in enumerate(ray_lines_set):
-		name = 'line' + str(index)		
-		ray = {'name': name, 'geometry': ray_lines, 'material': mat_line}
-		geoms.append(ray)
-	
-	mat_point = create_material('unlitSolidColor', base_color=[1.0, 0, 0, 1.0], thickness=1.0) # , point_size=10.0)	
-	for index, intersection_points in enumerate(intersection_points_set):
-		name = 'intpoints' + str(index)
-		pt = {'name': name, 'geometry': intersection_points, 'material': mat_point}
-		geoms.append(pt)
- 
-	mat_target = create_material('defaultLitTransparency', base_color=[0.0,0.5,1.0,0.5], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
-	for index, m in enumerate(point_targets):
-		name = 'box' + str(index)
-		o3d_mesh = convert_mesh(m)			
-		geom = {'name': name, 'geometry': o3d_mesh, 'material': mat_target}
+	if args.viewer == 'on':
+		geoms = []
+		o3d_mesh = convert_mesh(mesh)
+		mat_lit_trans = create_material('defaultLitTransparency', base_color=[0.467,0.467,0.467,0.2], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
+		geom = {'name': 'box', 'geometry': o3d_mesh, 'material': mat_lit_trans}
 		geoms.append(geom)
+
+		# materials. defaultLit, defaultUnlit, unlitLine, unlitGradient, unlitSolidColor, defaultLitTransparency.
+		# http://www.open3d.org/docs/latest/python_api/open3d.visualization.tensorboard_plugin.summary.add_3d.html
+		mat_lay = create_material('unlitSolidColor', base_color=[0.0, 0, 1.0, 1.0], thickness=1.0)
+		for index, ray_lines in enumerate(ray_lines_set):
+			name = 'line' + str(index)		
+			ray = {'name': name, 'geometry': ray_lines, 'material': mat_lay}
+			geoms.append(ray)
+		
+		mat_point = create_material('unlitSolidColor', base_color=[1.0, 0, 0, 1.0], thickness=1.0) # , point_size=10.0)	
+		for index, intersection_points in enumerate(intersection_points_set):
+			name = 'intpoints' + str(index)
+			pt = {'name': name, 'geometry': intersection_points, 'material': mat_point}
+			geoms.append(pt)
 	
-	o3d.visualization.draw(geoms) # , window_name="LiDAR simulation")
-	# o3d.visualization.draw_geometries([o3d_mesh, intersection_points, ray_lines])
+		mat_target = create_material('defaultLitTransparency', base_color=[0.0,0.5,1.0,0.5], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
+		for index, m in enumerate(point_targets):
+			name = 'box' + str(index)
+			o3d_mesh = convert_mesh(m)			
+			geom = {'name': name, 'geometry': o3d_mesh, 'material': mat_target}
+			geoms.append(geom)
+		
+		o3d.visualization.draw(geoms) # , window_name="LiDAR simulation")
+		# o3d.visualization.draw_geometries([o3d_mesh, intersection_points, ray_lines])
 
 	# save intersection
 	output_pcd = o3d.geometry.PointCloud()
 	for index, intersection_points in enumerate(intersection_points_set):
 		output_pcd += intersection_points
 	o3d.io.write_point_cloud(args.output, output_pcd)
+	print('output file = ', args.output)
 
 if __name__ == '__main__':
 	try:
