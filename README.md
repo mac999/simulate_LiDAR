@@ -5,7 +5,9 @@ Simulate LiDAR point cloud from RGBD dataset
 LiDAR point cloud generation.</br>
 <p align="center">
 <img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result1.JPG"/>
-<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result2.JPG"/></p>
+<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result2.JPG"/>
+<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output1.JPG"/>
+<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output2.JPG"/></p>
 </p>
 
 # install
