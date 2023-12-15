@@ -142,14 +142,16 @@ def convert_mesh(mesh):
 	o3d_mesh = o3d.geometry.TriangleMesh()
 	o3d_mesh.vertices = o3d.utility.Vector3dVector(vertices)
 	o3d_mesh.triangles = o3d.utility.Vector3iVector(faces)
-	o3d_mesh.vertex_normals = o3d.utility.Vector3dVector(normals)
+	writable_normals = np.array(normals, copy=True)
+	o3d_mesh.vertex_normals = o3d.utility.Vector3dVector(writable_normals)
 
 	return o3d_mesh
 
 def main():
 	# arguments
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
+	# parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
+	parser.add_argument('--input', default='model_complex.obj', help='input mesh model file(.obj, .ply)')
 	parser.add_argument('--output', default='output.pcd', help='output file(.pcd)')
 	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
 	parser.add_argument('--yaw', default=0.0, help='LiDAR yaw angle')
@@ -188,6 +190,7 @@ def main():
 		geoms = []
 		o3d_mesh = convert_mesh(mesh)
 		mat_lit_trans = create_material('defaultLitTransparency', base_color=[0.467,0.467,0.467,0.2], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
+		# mat_lit_trans = create_material('unlitSolidColor', base_color=[0.467,0.467,0.467,0.8], thickness=1.0, transmission=0.1) # , absorption_color=[0.5, 0.5, 0.5])
 		geom = {'name': 'box', 'geometry': o3d_mesh, 'material': mat_lit_trans}
 		geoms.append(geom)
 
