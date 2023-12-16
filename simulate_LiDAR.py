@@ -43,14 +43,16 @@ class lidar_device:
 	fov = 60.0 # 10 # LiDAR's field of view in degrees
 	interval = 20 # Angular interval between rays in degrees
 	range = 10.0  # Maximum LiDAR range
+	noise_option = 'uniform' # Noise option. [gaussian | uniform]
 	noise = 0.2 # Noise level (Gaussian standard deviation) in meters
 
-	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, interval=20, range = 10, noise=0.2):
+	def init(self, pos=[0.0,0.0,0.0], yaw=0.0, fov_angle=60.0, interval=20, range = 10, noise_option = 'uniform', noise=0.2):
 		self.position = pos
 		self.yaw = yaw
 		self.fov = fov_angle
 		self.interval = interval
 		self.range = range
+		self.noise_option = noise_option
 		self.noise = noise
 
 	def create_rays(self):
@@ -106,7 +108,12 @@ class lidar_device:
 
 			# Create an Open3D PointCloud from the intersection points
 			intersection_points = o3d.geometry.PointCloud()
-			locations = locations + np.random.normal(0, self.noise, locations.shape)
+
+			if self.noise_option == 'gaussian':
+				locations = locations + np.random.normal(0, self.noise, locations.shape)	# random sampling from noraml distribution. normal(mu, sigma, size)
+			elif self.noise_option == 'uniform':
+				locations = locations + np.random.uniform(-self.noise, self.noise, locations.shape)
+
 			intersection_points.points = o3d.utility.Vector3dVector(locations) 
 			intersection_points_set.append(intersection_points)
 
@@ -190,7 +197,8 @@ def main():
 	parser.add_argument('--interval', default=100, help='LiDAR interval count')
 	parser.add_argument('--interval_angle', default=0.0, help='LiDAR interval angle')
 	parser.add_argument('--range', default=10.0, help='LiDAR range')
-	parser.add_argument('--noise', default=0.05, help='noise level')
+	parser.add_argument('--noise_option', default='uniform', help='Noise option. [gaussian | uniform]')
+	parser.add_argument('--noise', default=0.05, help='Noise level. ex) sigma = 0.05 in Gaussian standard deviation or uniform range')
 	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
 	parser.add_argument('--viewer', default='on', help='run viewer = [on | off]')
 	args = parser.parse_args()
@@ -215,7 +223,7 @@ def main():
 
 	# create virtual lidar and scan
 	lidar = lidar_device()
-	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, interval=args.interval, range=args.range, noise=args.noise)
+	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, interval=args.interval, range=args.range, noise_option=args.noise_option, noise=args.noise)
 
 	ray_origins, ray_directions = lidar.create_rays()
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
