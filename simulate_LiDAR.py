@@ -5,9 +5,9 @@
 #  0.1. updated.
 # date: 
 #  2023.10.1. init
-#  2023.11.4. support mesh object
+#  2023.11.4. support mesh object, interval option
 #  2023.12.5. refactoring 
-# todo: load RGBD dataset, refactoring, CUDA Etc.
+#  2023.12.16. viewer option. test. fixed bug. update.
 # 
 import os, sys, argparse, json, re, math, traceback
 import trimesh, traceback
@@ -147,21 +147,56 @@ def convert_mesh(mesh):
 
 	return o3d_mesh
 
+def view_simulation_results(ray_lines_set, intersection_points_set, point_targets, mesh):
+	geoms = []
+	o3d_mesh = convert_mesh(mesh)
+	mat_lit_trans = create_material('defaultLitTransparency', base_color=[0.467,0.467,0.467,0.2], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
+	# mat_lit_trans = create_material('unlitSolidColor', base_color=[0.467,0.467,0.467,0.8], thickness=1.0, transmission=0.1) # , absorption_color=[0.5, 0.5, 0.5])
+	geom = {'name': 'box', 'geometry': o3d_mesh, 'material': mat_lit_trans}
+	geoms.append(geom)
+
+	# materials. defaultLit, defaultUnlit, unlitLine, unlitGradient, unlitSolidColor, defaultLitTransparency.
+	# http://www.open3d.org/docs/latest/python_api/open3d.visualization.tensorboard_plugin.summary.add_3d.html
+	mat_lay = create_material('unlitSolidColor', base_color=[0.0, 0, 1.0, 1.0], thickness=1.0)
+	for index, ray_lines in enumerate(ray_lines_set):
+		name = 'line' + str(index)		
+		ray = {'name': name, 'geometry': ray_lines, 'material': mat_lay}
+		geoms.append(ray)
+	
+	mat_point = create_material('unlitSolidColor', base_color=[1.0, 0, 0, 1.0], thickness=1.0) # , point_size=10.0)	
+	for index, intersection_points in enumerate(intersection_points_set):
+		name = 'intpoints' + str(index)
+		pt = {'name': name, 'geometry': intersection_points, 'material': mat_point}
+		geoms.append(pt)
+
+	mat_target = create_material('defaultLitTransparency', base_color=[0.0,0.5,1.0,0.5], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
+	for index, m in enumerate(point_targets):
+		name = 'box' + str(index)
+		o3d_mesh = convert_mesh(m)			
+		geom = {'name': name, 'geometry': o3d_mesh, 'material': mat_target}
+		geoms.append(geom)
+	
+	o3d.visualization.draw(geoms, title="LiDAR simulation")
+
 def main():
 	# arguments
 	parser = argparse.ArgumentParser()
 	# parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
-	parser.add_argument('--input', default='model_complex.obj', help='input mesh model file(.obj, .ply)')
+	parser.add_argument('--input', default='model_complex1.obj', help='input mesh model file(.obj, .ply)')
 	parser.add_argument('--output', default='output.pcd', help='output file(.pcd)')
 	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
 	parser.add_argument('--yaw', default=0.0, help='LiDAR yaw angle')
 	parser.add_argument('--fov', default=60.0, help='LiDAR field of view')
-	parser.add_argument('--interval', default=20, help='LiDAR interval count')
-	parser.add_argument('--range', default=20.0, help='LiDAR range')
-	parser.add_argument('--noise', default=0.01, help='noise level')
+	parser.add_argument('--interval', default=100, help='LiDAR interval count')
+	parser.add_argument('--interval_angle', default=0.0, help='LiDAR interval angle')
+	parser.add_argument('--range', default=10.0, help='LiDAR range')
+	parser.add_argument('--noise', default=0.05, help='noise level')
 	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
 	parser.add_argument('--viewer', default='on', help='run viewer = [on | off]')
 	args = parser.parse_args()
+
+	if args.interval_angle > 0.0:
+		args.interval = int(args.fov / args.interval_angle)
 
 	# create object
 	mesh = None
@@ -185,45 +220,15 @@ def main():
 	ray_origins, ray_directions = lidar.create_rays()
 	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
 
-	# room 
-	if args.viewer == 'on':
-		geoms = []
-		o3d_mesh = convert_mesh(mesh)
-		mat_lit_trans = create_material('defaultLitTransparency', base_color=[0.467,0.467,0.467,0.2], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
-		# mat_lit_trans = create_material('unlitSolidColor', base_color=[0.467,0.467,0.467,0.8], thickness=1.0, transmission=0.1) # , absorption_color=[0.5, 0.5, 0.5])
-		geom = {'name': 'box', 'geometry': o3d_mesh, 'material': mat_lit_trans}
-		geoms.append(geom)
-
-		# materials. defaultLit, defaultUnlit, unlitLine, unlitGradient, unlitSolidColor, defaultLitTransparency.
-		# http://www.open3d.org/docs/latest/python_api/open3d.visualization.tensorboard_plugin.summary.add_3d.html
-		mat_lay = create_material('unlitSolidColor', base_color=[0.0, 0, 1.0, 1.0], thickness=1.0)
-		for index, ray_lines in enumerate(ray_lines_set):
-			name = 'line' + str(index)		
-			ray = {'name': name, 'geometry': ray_lines, 'material': mat_lay}
-			geoms.append(ray)
-		
-		mat_point = create_material('unlitSolidColor', base_color=[1.0, 0, 0, 1.0], thickness=1.0) # , point_size=10.0)	
-		for index, intersection_points in enumerate(intersection_points_set):
-			name = 'intpoints' + str(index)
-			pt = {'name': name, 'geometry': intersection_points, 'material': mat_point}
-			geoms.append(pt)
-	
-		mat_target = create_material('defaultLitTransparency', base_color=[0.0,0.5,1.0,0.5], thickness=1.0, transmission=0.5, absorption_color=[0.5, 0.5, 0.5])
-		for index, m in enumerate(point_targets):
-			name = 'box' + str(index)
-			o3d_mesh = convert_mesh(m)			
-			geom = {'name': name, 'geometry': o3d_mesh, 'material': mat_target}
-			geoms.append(geom)
-		
-		o3d.visualization.draw(geoms) # , window_name="LiDAR simulation")
-		# o3d.visualization.draw_geometries([o3d_mesh, intersection_points, ray_lines])
-
 	# save intersection
 	output_pcd = o3d.geometry.PointCloud()
 	for index, intersection_points in enumerate(intersection_points_set):
 		output_pcd += intersection_points
 	o3d.io.write_point_cloud(args.output, output_pcd)
 	print('output file = ', args.output)
+
+	if args.viewer == 'on':
+		view_simulation_results(ray_lines_set, intersection_points_set, point_targets, mesh)
 
 if __name__ == '__main__':
 	try:
