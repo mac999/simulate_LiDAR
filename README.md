@@ -7,8 +7,8 @@ LiDAR point cloud generation.</br>
 <img height="180" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/image.JPG"/>
 <img height="180" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result1.JPG"/>
 <img height="180" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result2.JPG"/><br/>
-<img height="290" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output1.JPG"/>
-<img height="290" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output2.JPG"/>
+<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output1.JPG"/>
+<img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output2.JPG"/>
 <p align="center">input=model_complex.obj, fov=60, interval=20, range=20.0, noise=0.01</p>
 </p>
 <p align="center">
