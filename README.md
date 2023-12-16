@@ -1,5 +1,5 @@
 # Simulate LiDAR data
-Simulate LiDAR point cloud from RGBD dataset
+Simulate LiDAR point cloud from RGBD dataset with various options such as scanning 3D model, Gaussian noise, LiDAR Fov, LiDAR interval angle etc.  
 
 # description
 LiDAR point cloud generation.</br>
