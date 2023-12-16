@@ -16,6 +16,12 @@ LiDAR point cloud generation.</br>
 <p align="center">input=model_complex1.obj, fov=180, interval=100, range=5.0, noise=0.05</p>
 </p>
 
+# version history
+v0.1</br>
+> LiDAR point cloud generation draft version.
+v0.2</br>
+> 2023.12.5., refactoring. 2023.12.16., viewer option. test. fixed bug. update.
+
 # install
 git clone https://github.com/mac999/simulate_LiDAR.git</br>
 pip install traceback, tqdm, numpy</br>
@@ -35,12 +41,6 @@ python simulate_LiDAR.py [options]</br></br>
 --interval_angle: default=0.0, help='LiDAR interval angle'</br>
 --viewer: default='on: help='run viewer = [on | off]'</br>
 </br>
-
-# version history
-v0.1</br>
-> LiDAR point cloud generation draft version.
-v0.2</br>
-> 2023.12.5., refactoring. 2023.12.16., viewer option. test. fixed bug. update.
 
 # license
 MIT license</br>
