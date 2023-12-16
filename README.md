@@ -9,12 +9,12 @@ LiDAR point cloud generation.</br>
 <img height="180" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/result2.JPG"/><br/>
 <img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output1.JPG"/>
 <img height="300" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output2.JPG"/>
-<p align="center">input=model_complex.obj, fov=60, interval=20, range=20.0, noise(guussian)=0.01</p>
+<p align="center">input=model_complex.obj, fov=60, interval=20, range=20.0, noise(gaussian)=0.01</p>
 </p>
 <p align="center">
 <img height="240" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/output3.JPG"/>
 <img height="400" src="https://github.com/mac999/simulate_LiDAR/blob/main/doc/check1.JPG"/>
-<p align="center">input=model_complex1.obj, fov=180, interval=100, range=5.0, noise(guussian)=0.05</p></br>
+<p align="center">input=model_complex1.obj, fov=180, interval=100, range=5.0, noise(gaussian)=0.05</p></br>
 </p>
 
 # version history
