@@ -31,9 +31,9 @@ python simulate_LiDAR.py [options]</br></br>
 --fov: default=60.0, help='LiDAR field of view'</br>
 --range: default=10.0, help='LiDAR range'</br>
 --noise', default=0.2, help='noise level'</br>
---interval: default=100, help='LiDAR interval count'
---interval_angle: default=0.0, help='LiDAR interval angle'
---viewer: default='on: help='run viewer = [on | off]'
+--interval: default=100, help='LiDAR interval count'</br>
+--interval_angle: default=0.0, help='LiDAR interval angle'</br>
+--viewer: default='on: help='run viewer = [on | off]'</br>
 </br>
 
 # version history
