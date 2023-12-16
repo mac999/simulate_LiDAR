@@ -39,3 +39,8 @@ python simulate_LiDAR.py [options]</br></br>
 # version history
 v0.1</br>
 > LiDAR point cloud generation draft version.
+v0.2</br>
+> 2023.12.5., refactoring. 2023.12.16., viewer option. test. fixed bug. update.
+
+# license
+MIT license</br>
