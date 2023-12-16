@@ -18,7 +18,8 @@ LiDAR point cloud generation.</br>
 
 # version history
 v0.1</br>
-> LiDAR point cloud generation draft version.
+> LiDAR point cloud generation draft version.</br>
+
 v0.2</br>
 > 2023.12.5., refactoring. 2023.12.16., viewer option. test. fixed bug. update.
 
