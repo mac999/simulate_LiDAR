@@ -1,4 +1,4 @@
-# Simulate LiDAR
+# LiDAR simulation
 Simulate LiDAR point cloud from RGBD dataset with various options such as scanning 3D model, Gaussian noise, LiDAR Fov, LiDAR interval angle etc.</br>
 This open source tool is a simple program that simulates LiDAR through automatically generates 3D scan data (point cloud). When you need a 3D point cloud but it is difficult to obtain, you can generate scan data from a virtual 3D model(mesh). It can be used for deep learning, etc. Includes 3D model scan, lidar angle, spacing, noise (Gaussian, uniform support) generation options, etc. 
 
