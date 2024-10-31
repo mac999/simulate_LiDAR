@@ -189,8 +189,9 @@ def main():
 	# arguments
 	parser = argparse.ArgumentParser()
 	# parser.add_argument('--input', default='model.obj', help='input mesh model file(.obj, .ply)')
-	parser.add_argument('--input', default='model_complex1.obj', help='input mesh model file(.obj, .ply)')
+	parser.add_argument('--input', default='pipe_curve2.obj', help='input mesh model file(.obj, .ply)') # model_complex1.obj
 	parser.add_argument('--output', default='output.pcd', help='output file(.pcd)')
+	parser.add_argument('--data_log', default='data_log.csv', help='data log file')
 	parser.add_argument('--pos', default='0.0,0.0,0.0', help='LiDAR position')
 	parser.add_argument('--yaw', default=0.0, help='LiDAR yaw angle')
 	parser.add_argument('--fov', default=60.0, help='LiDAR field of view')
@@ -201,10 +202,22 @@ def main():
 	parser.add_argument('--noise', default=0.05, help='Noise level. ex) sigma = 0.05 in Gaussian standard deviation or uniform range')
 	parser.add_argument('--multi_targets', default=0, help='multiple targets count')
 	parser.add_argument('--viewer', default='on', help='run viewer = [on | off]')
+	parser.add_argument('--sensor_config', default='sensor_config.json', help='sensor configuration file')
 	args = parser.parse_args()
 
 	if args.interval_angle > 0.0:
 		args.interval = int(args.fov / args.interval_angle)
+
+	# load sensor configuration
+	if os.path.exists(args.sensor_config):
+		with open(args.sensor_config) as f:
+			data = json.load(f)
+			args.origin_position = data['origin_position']
+			args.device_speed = data['device_speed'] # m/s
+			args.device_time_log = data['device_time_log']
+			sensors = data['sensors']
+			for sensor in sensors:
+				args.interval = sensor['interval']
 
 	# create object
 	mesh = None
@@ -222,21 +235,66 @@ def main():
 		point_targets = create_plane_targets(extents[1] / 2.0, args.multi_targets)
 
 	# create virtual lidar and scan
-	lidar = lidar_device()
-	lidar.init(pos=[float(x) for x in args.pos.split(',')], yaw=args.yaw, fov_angle=args.fov, interval=args.interval, range=args.range, noise_option=args.noise_option, noise=args.noise)
+	datetimes = args.device_time_log
+	records = []
+	for dt in datetimes:
+		lidar = lidar_device()	
+		position = [float(x) for x in args.pos.split(',')]
+		date = dt.split(' ')[0]
+		time = dt.split(' ')[1]
+		seconds = int(time.split(':')[0]) * 3600 + int(time.split(':')[1]) * 60 + int(time.split(':')[2])
+		position[2] = position[2] + args.device_speed * seconds
 
-	ray_origins, ray_directions = lidar.create_rays()
-	ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
+		lidar.init(pos=position, yaw=args.yaw, fov_angle=args.fov, interval=args.interval, range=args.range, noise_option=args.noise_option, noise=args.noise)
 
-	# save intersection
-	output_pcd = o3d.geometry.PointCloud()
-	for index, intersection_points in enumerate(intersection_points_set):
-		output_pcd += intersection_points
-	o3d.io.write_point_cloud(args.output, output_pcd)
-	print('output file = ', args.output)
+		ray_origins, ray_directions = lidar.create_rays()
+		ray_lines_set, intersection_points_set = lidar.scan(ray_origins, ray_directions, point_targets)
+
+		record = {
+			'datetime': dt,
+			'ray_origins': ray_origins.copy(),
+			'ray_directions': ray_directions.copy(),
+			'ray_lines_set': ray_lines_set.copy(),
+			'intersection_points_set': intersection_points_set.copy()
+		}
+		records.append(record)
+
+	log_file = open(args.data_log, 'w')
+	log_file.write('date,time,x,y,z,diameter\n')
+	intersection_points_set_all = []
+	ray_lines_set_all = [] 
+	point_targets_all = []
+	for record in records:
+		for index, intersection_points in enumerate(record['intersection_points_set']):
+			intersection_points_set_all.append(intersection_points)
+		for index, ray_lines in enumerate(record['ray_lines_set']):
+			ray_lines_set_all.append(ray_lines)
+		for index, point_target in enumerate(point_targets):
+			point_targets_all.append(point_target)
+
+		# save intersection
+		output_pcd = o3d.geometry.PointCloud()
+		for index, intersection_points in enumerate(intersection_points_set):
+			output_pcd += intersection_points
+		output_fname = args.output.replace('.pcd', '_'+record['datetime']+'.pcd')
+		output_fname = output_fname.replace(' ', '_')
+		output_fname = output_fname.replace(':', '')
+		o3d.io.write_point_cloud(output_fname, output_pcd)
+		print('output file = ', output_fname)
+
+		# save data log		
+		dt = record['datetime']
+		date = dt.split(' ')[0]
+		time = dt.split(' ')[1]
+		insersection_points_set = record['intersection_points_set']
+
+		diameter = 10.0
+		for index, intersection_points in enumerate(intersection_points_set):
+			for p in intersection_points.points:
+				log_file.write(date + ',' + time + ',' + str(p[0]) + ',' + str(p[1]) + ',' + str(p[2]) + ',' + str(diameter) + '\n')
 
 	if args.viewer == 'on':
-		view_simulation_results(ray_lines_set, intersection_points_set, point_targets, mesh)
+		view_simulation_results(ray_lines_set_all, intersection_points_set_all, point_targets_all, mesh)
 
 if __name__ == '__main__':
 	try:
