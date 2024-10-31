@@ -26,6 +26,9 @@ v0.1</br>
 v0.2</br>
 > 2023.12.5., refactoring. 2023.12.16., noise option(gaussian | uniform) viewer option. test. fixed bug. update.
 
+v0.3</br>
+> 2024.10.1., dynamic behavior simulation with linear model. 
+
 # install
 git clone https://github.com/mac999/simulate_LiDAR.git</br>
 pip install traceback, tqdm, numpy</br>
